@@ -16,6 +16,10 @@
 ## Project setup
 ```
 npm install
+
+## setup api base url
+in config.js 
+baseUrl = your api base url
 ```
 
 ### Compiles and hot-reloads for development
