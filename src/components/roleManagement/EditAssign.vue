@@ -1,43 +1,30 @@
 <template>
   <div>
-    <b-form @submit.prevent="createRole" @reset="reset">
-        <b-form-group id="name" label="Name:" label-for="name">
-          <b-form-input
-              id="name"
-              label="Name:"
-              v-model="name"
-              type="text"
-              placeholder="Enter name"
-              required
-          ></b-form-input>
-        </b-form-group>
+    <b-form @submit.prevent="updateAssign" @reset="reset">
+      <b-form-group id="user" label="User:" label-for="user">
+        <b-form-select class="form-control" v-model="user" :options="users" required>
+          <!-- <template #first>
+            <b-form-select-option :value="item.id" aria-selected="true" >{{ item.name + ' | ' + item.email }}</b-form-select-option>
+          </template>-->
+        </b-form-select>
+      </b-form-group>
 
-        <b-form-group id="description" label="Description:" label-for="description">
-          <b-form-input
-              id="description"
-              v-model="description"
-              placeholder="Enter description"
-              required
-          ></b-form-input>
-        </b-form-group>
+      <b-form-group id="role" label="Role:" label-for="role">
+        <b-form-select class="form-control" v-model="role" :options="roles" required>
+        <!--<template #first>
+            <b-form-select-option id="selectedRole" :value="item.role_id" aria-selected="true">{{ item.role_name + ' | ' + item.role_level }}</b-form-select-option>
+        </template>-->
+        </b-form-select>
+      </b-form-group>
 
-        <b-form-group id="level" label="Level:" label-for="level">
-          <b-form-input
-              id="level"
-              v-model="level"
-              placeholder="Enter Level"
-              required
-          ></b-form-input>
-        </b-form-group>
-
-        <div class="modal-footer">
-          <b-button size="sm" type="submit" variant="success">
-            create
-          </b-button>
-          <b-button size="sm" variant="danger" type="reset">
-            Reset
-          </b-button>
-        </div>
+      <div class="modal-footer">
+        <b-button size="sm" type="submit" variant="success">
+          create
+        </b-button>
+        <b-button size="sm" variant="danger" type="reset">
+          Reset
+        </b-button>
+      </div>
 
     </b-form>
 
@@ -50,26 +37,69 @@
 import axios from "axios";
 
 export default {
-  name:'EditRole',
+  name:'EditAssign',
   props: ['item'],
+
 
   data(){
     return {
-      name : this.item.name,
-      description : this.item.description,
-      level : this.item.level,
+      users : [],
+      roles : [],
+      user: this.item.id,
+      role: this.item.role_id
     }
 
   },
 
 
+  created() {
+    this.getUsers();
+    this.getRoles();
+  },
+
   methods:{
 
-    createRole(){
+    getUsers(){
+      axios.get(window.config.baseUrl + 'users', {
+        headers: {
+          'Authorization': 'Bearer '+this.$session.get('token')
+        }
+      })
+          .then(response => {
+            this.users = response.data.data.map(user => ({
+              value:user.id, text: user.name + ' | ' + user.email
+            }));
 
-      axios.post(window.config.baseUrl + 'role/update/' + this.item.id,
+          }).catch(error => {
+        this.falshMessage.error({
+          title : 'Error',
+          message : error.message,
+        });
+      })
+    },
+
+    getRoles() {
+      axios.get(window.config.baseUrl + 'roles',
           {
-            name:this.name, description:this.description, level:this.level,
+            headers: {
+              'Authorization': 'Bearer ' + this.$session.get('token')
+            }
+          })
+          .then(response => {
+            this.roles = response.data.data.map(role => ({
+              value:role.id, text: role.name + ' | ' + role.level
+            }));
+          })
+          .catch(error => {
+            console.log(error);
+          })
+    },
+
+    updateAssign(){
+
+      axios.post(window.config.baseUrl + 'user/role/assign',
+          {
+            user_id : this.user, role_id : this.role
           },
           { headers: {
                 'Authorization': 'Bearer ' + this.$session.get('token')
@@ -77,59 +107,35 @@ export default {
           }
       )
       .then(response => {
-
         if (response.data.status){
-          this.flashMessage.success({
-            title: 'Update Success.',
-            message: 'Role updated successfully',
-          });
-          this.hideModal();
+          window.flash.success(this, 'Update success', 'Role assign updated successfully')
+          window.functions.hideModal(this, 'editAssign')
           window.functions.lazyReload()
         }
         else
         {
-          this.flashMessage.error({
-            title: 'Update Failed.',
-            message: response.data.data.message,
-          });
+          window.flash.warning(this, 'Update success', response.data.data.message)
         }
 
       })
       .catch(error => {
-        this.flashMessage.error({
-          title: 'Create Failed.',
-          message: error.message,
-        });
+        window.flash.error(this, 'Update success', error.message)
       })
     },
 
+
     reset(event) {
       event.preventDefault()
-      this.name = ''
-      this.description = null
-      this.level = null
-      this.hideModal()
+      this.role = null
+      this.user = null
+      window.functions.hideModal(this, 'editAssign')
     },
-
-    hideModal(){
-      this.$bvModal.hide('editRole');
-
-    }
   }
 
 }
 
+
+
+
 </script>
 
-
-<style>
-
-  .form-group{
-    padding-top: 5px;
-  }
-
-  .modal-footer {
-    justify-content: center;
-  }
-
-</style>

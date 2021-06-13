@@ -1,6 +1,6 @@
 <template>
-  <div>
 
+  <div>
     <b-modal id="addRole" title="Create Role" aria-disabled="true" hide-footer>
     <b-form @submit.prevent="createRole" @reset="reset">
         <b-form-group id="name" label="Name:" label-for="name">
@@ -40,11 +40,8 @@
             Reset
           </b-button>
         </div>
-
-
     </b-form>
     </b-modal>
-
   </div>
 
 </template>
@@ -52,42 +49,25 @@
 <script>
 
 import axios from "axios";
-import $ from 'jquery';
 
 export default {
-  name:'SaveRole',
-  props: ['item'],
+  name:'AddRole',
 
   data(){
     return {
       name : null,
       description : null,
       level : null,
-      url : null,
     }
 
   },
 
-  mounted() {
-    console.log($('#addRole').hasClass('show') );
-    //check if prop value exist
-    if (this.item !== null) {
-        this.name = this.item.name,
-        this.description = this.item.description,
-        this.level = this.item.level
-        this.url = 'role/store/' + this.item.id
-    }
-    else {
-      this.url = 'role/store/'
-    }
-
-  },
 
   methods:{
 
     createRole(){
 
-      axios.post(window.config.baseUrl + this.url,
+      axios.post(window.config.baseUrl + 'role/store',
           {
             name:this.name, description:this.description, level:this.level,
           },
@@ -99,26 +79,18 @@ export default {
       .then(response => {
 
         if (response.data.status){
-          this.flashMessage.success({
-            title: 'Create Success.',
-            message: 'Role created successfully',
-          });
-          this.hideModal()
+          window.flash.success(this, 'Create success', 'Role created successfully.')
+          window.functions.hideModal(this, 'addRole');
+          window.functions.lazyReload();
         }
         else
         {
-          this.flashMessage.error({
-            title: 'Create Failed.',
-            message: response.data.data.message,
-          });
+          window.flash.error(this, 'Create failed', 'Role create failed.')
         }
 
       })
       .catch(error => {
-        this.flashMessage.error({
-          title: 'Create Failed.',
-          message: error.message,
-        });
+        window.flash.error(this, 'Failed', error.message)
       })
     },
 
@@ -127,28 +99,11 @@ export default {
       this.name = ''
       this.description = null
       this.level = null
-      this.hideModal()
+      window.functions.hideModal(this, 'addRole');
     },
 
-    hideModal(){
-      this.$bvModal.hide('addRole');
-
-    }
   }
 
 }
 
 </script>
-
-
-<style>
-
-  .form-group{
-    padding-top: 5px;
-  }
-
-  .modal-footer {
-    justify-content: center;
-  }
-
-</style>

@@ -17,9 +17,9 @@
          </div>
         <div style="float: right">
           <!-- <b-button v-b-modal.create-role>Create Role</b-button>-->
-         <b-button @click="$bvModal.show('addRole')">Assign Role</b-button>
+         <b-button @click="$bvModal.show('assignRole')">Assign Role</b-button>
           <AssignRole></AssignRole>
-          <b-modal id="editRole" title="Edit Role" aria-disabled="true" hide-footer>
+          <b-modal id="editAssign" title="Edit Role" aria-disabled="true" hide-footer>
             <EditAssign :item="item" v-if="item"></EditAssign>
           </b-modal>
          </div>
@@ -71,7 +71,7 @@ import AssignRole from "./AssignRole";
 import EditAssign from "./EditAssign";
 
 export default {
-  name: 'Users',
+  name: 'UserRoles',
   components: {
     Layout,
     AssignRole,
@@ -81,11 +81,11 @@ export default {
   data() {
     return {
       items: [],
-      item:null,
+      item: null,
       filter: null,
-      fields: ['name', 'description', 'level', 'actions'],
+      fields: ['name', 'email', 'role_name', 'role_level', 'actions'],
       currentPage: 1,
-      perPage: 5,
+      perPage: window.config.perPage,
       rows: 0
     }
   },
@@ -97,7 +97,7 @@ export default {
   methods: {
 
      roles() {
-       axios.get(window.config.baseUrl + 'roles',
+       axios.get(window.config.baseUrl + 'user/roles',
         {
           headers: {
             'Authorization': 'Bearer ' + this.$session.get('token')
@@ -108,21 +108,18 @@ export default {
             this.items = res.data.data;
           })
         .catch(error => {
-          console.log(error);
+          window.flash.warning(this, 'Data fetching error', error.message)
         })
     },
 
     edit(data) {
       // I need to disable the button here
       this.item = data;
-      this.$bvModal.show('editRole');
+      window.functions.showModal(this, 'editAssign')
 
     }
 
   },
-
-
-
 
 
 }

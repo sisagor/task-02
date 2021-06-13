@@ -1,32 +1,59 @@
 <template>
   <Layout>
-
     <div class="container-fluid px-4">
-    <h1 class="mt-4">Users</h1>
+    <h1 class="mt-4">Roles</h1>
     <ol class="breadcrumb mb-4">
       <li class="breadcrumb-item">
       <!--<a href="index.html"></a>-->
         <router-link to="/dashboard">Dashboard</router-link>
       </li>
-      <li class="breadcrumb-item active">Users</li>
+      <li class="breadcrumb-item active">Roles</li>
     </ol>
     <div class="card mb-4">
       <div class="card-header">
-        <i class="fas fa-table me-1"></i>
-        Users
+         <div style="float: left">
+           <i class="fas fa-setting me-1"></i>
+           Roles
+         </div>
+        <div style="float: right">
+          <!-- <b-button v-b-modal.create-role>Create Role</b-button>-->
+         <b-button @click="$bvModal.show('addRole')">Create Role</b-button>
+          <AddRole></AddRole>
+          <b-modal id="editRole" title="Edit Role" aria-disabled="true" hide-footer>
+            <EditRole :item="item" v-if="item"></EditRole>
+          </b-modal>
+         </div>
+
       </div>
       <div class="card-body">
 
-        <grid
-            :auto-width="autoWidth"
-            :cols="cols"
-            :language="language"
-            :pagination="pagination"
-            :rows="rows"
-            :search="search"
-            :sort="sort"
-            :width="width"
-        ></grid>
+        <b-row>
+          <b-col md="3" offset-md="9">
+            <b-form-input v-model="filter" type="search" placeholder="search here">
+            </b-form-input>
+          </b-col>
+        </b-row>
+
+        <b-row>
+          <b-col md="12">
+            <b-table striped hover
+                 :items="items"
+                 :fields="fields"
+                 :filter="filter"
+                 :per-page="perPage"
+                 :current-page="currentPage"
+            >
+              <template v-slot:cell(actions)="items">
+                <b-button size="sm" @click="edit(items.item)" class="mr-1" variant="warning">
+                  Edit
+                </b-button>
+              </template>
+
+            </b-table>
+
+            <b-pagination align="right" v-model="currentPage" :total-rows="rows" :per-page="perPage"></b-pagination>
+          </b-col>
+        </b-row>
 
       </div>
     </div>
@@ -38,67 +65,66 @@
 
 <script>
 
-import Grid from 'gridjs-vue'
-import axios from "axios";
 import Layout from "../layouts/Layout";
+import axios from "axios";
+import AddRole from "./AddRole";
+import EditRole from "./EditRole";
 
 export default {
-  name: 'MyTable',
+  name: 'Roles',
   components: {
-    Grid,
-    Layout
+    Layout,
+    AddRole,
+    EditRole,
   },
+
   data() {
     return {
-        // REQUIRED:
-        // An array containing strings of column headers
-          cols: ['Name', 'Phone', 'Email', 'Gender', 'Date of Birth'],
-          //Rows
-          rows:null,
-
-          // OPTIONAL:
-          // Boolean to automatically set table width
-          autoWidth: true,
-          // Localization dictionary object
-          language: {},
-          // Localization dictionary object
-          /*server: true,*/
-          // Boolean or pagination settings object
-          pagination: true,
-          // Boolean or search settings object
-          search: true,
-          // Boolean or sort settings object
-          sort: true,
-          // String with name of theme or 'none' to disable
-          theme: 'mermaid',
-          // String with css width value
-          width: '100%',
+      items: [],
+      item:null,
+      filter: null,
+      fields: ['name', 'description', 'level', 'actions'],
+      currentPage: 1,
+      perPage: window.config.perPage,
+      rows: 0
     }
   },
 
-  beforeMount () {
-    axios.get(window.config.baseUrl + 'users', {
-      headers: {
-        'Authorization': 'Bearer '+this.$session.get('token')
-      }
-    })
-      .then(response => {
-        console.log(response.data.data)
-        this.rows = response.data.data.map(user =>
-            [
-                user.data.name, user.data.phone, user.data.email, user.data.gender, user.data.dob
-            ]);
+  created() {
+    this.roles()
+  },
 
-      }).catch(error => {
+  methods: {
 
-        this.falshMessage.error({
-          title : 'Error',
-          message : error.message,
-        });
-    })
+     roles() {
+       axios.get(window.config.baseUrl + 'roles',
+        {
+          headers: {
+            'Authorization': 'Bearer ' + this.$session.get('token')
+          }
+        })
+        .then(response => {
+            this.rows = parseInt(response.data.data.length);
+            this.items = response.data.data;
+          })
+        .catch(error => {
+          window.flash.warning(this, 'Data fetching error', error.message)
+        })
+    },
+
+    edit(data) {
+      // I need to disable the button here
+      this.item = data;
+      this.$bvModal.show('editRole');
+
+    }
+
+  },
 
 
-  }
+
+
+
 }
 
 </script>
