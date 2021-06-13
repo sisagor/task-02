@@ -85,7 +85,7 @@ export default {
         }
         else
         {
-          window.flash.error(this, 'Create failed', 'Role create failed.')
+          window.flash.warning(this, 'Create failed', response.data.data.message)
         }
 
       })
